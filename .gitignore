@@ -1,0 +1,7 @@
+# Folders
+.vscode
+__pycache__
+*.egg-info
+scratch
+build
+dist
