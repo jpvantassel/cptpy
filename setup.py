@@ -5,13 +5,14 @@ https://packaging.python.org/guides/distributing-packages-using-setuptools/
 https://github.com/pypa/sampleproject
 """
 
+from cptpy import __version__
 from setuptools import setup, find_packages
 with open("README.md", encoding="utf8") as f:
     long_description = f.read()
 
 setup(
     name='cptpy',
-    version='0.1.0a0',
+    version=__version__,
     description='A Python package for processing Cone Penetration Test (CPT) data.',
     long_description=long_description,
     long_description_content_type='text/markdown',
