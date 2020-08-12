@@ -1,6 +1,7 @@
 """CPTu class definition."""
 
 from cptpy import CPT
+from cptpy.constants import GAMMA_W
 
 
 class CPTu(CPT):
@@ -35,32 +36,36 @@ class CPTu(CPT):
             `qc`, `fs`, and `u2` data respectively to convert it to
             the correct unit, default involves no modification.
 
-        Returns
-        -------
-        CPTu
-            Initialized `CPTu` object.
+
+
 
         """
         super().__init__(depth, qc, fs, depth_to_m=depth_to_m,
                          qc_to_kpa=qc_to_kpa, fs_to_kpa=fs_to_kpa)
         self.u2 = self._prepper(u2, u2_to_kpa)
+        self._u0 = None
         self.gwt = float(gwt) if gwt is not None else None
 
     @property
     def u0(self):
         """Hydrostatic pore water pressure."""
-        try:
-            return self._u0
+        try:    
+            self._u0 = (self.depth - self.gwt)*GAMMA_W
         except AttributeError:
-            try:
-                self._u0 = (self.depth - self.gwt)*
-            except AttributeError:
-                msg = "The calculation you requested requires the definition "
-                msg += "of hydrostatic pore water pressure (u0), however the "
-                msg += "ground water table (gwt) is not defined. Define `gwt` "
-                msg += "before re-attempting."
-                raise ValueError(msg)
+            msg = "The calculation you requested requires the definition "
+            msg += "of hydrostatic pore water pressure (u0), however the "
+            msg += "ground water table (gwt) is not defined. Define `gwt` "
+            msg += "before re-attempting."
+            raise ValueError(msg)
+        else:
             self._u0[self.depth <= self.gwt] = 0
-            return self._u0
+        return self._u0 
 
-    # TODO (jpv): Finish u0
+    def sanity_check(self):
+        """Perform's various sanity checks on the provided CPTu data.
+        
+        Sanity checks include: depth increases monotonically, 2)
+
+
+        """
+        # Depth increases monotonically

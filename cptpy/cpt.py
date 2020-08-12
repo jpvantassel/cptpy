@@ -1,5 +1,7 @@
 """CPT class definition."""
 
+import warnings
+
 import numpy as np
 
 
@@ -57,3 +59,63 @@ class CPT():
         # TODO (jpv): Is the assumption of an elemental function good here?
         values = qc_to_kpa(values)
         return values
+
+    def sanity_check(self, apply_fixes="prompt"):
+        """Perform's various sanity checks on the provided `CPT` data.
+
+        Sanity checks include: depth values are strictly greater than
+        zero, depth increases monotonically, `qc` and `fs` is greater
+        than zero at all depths,  
+
+        Parameters
+        ----------
+        apply_fixes : {"yes", "no", "prompt"}, optional
+            Most of the sanity checks have simple solutions
+            preprogrammed. To automatically apply the fixes pass `"yes"`
+            , to ingore the fixes pass `"no"`, to have the program
+            prompt for authorization use `"prompt"`, the default is 
+            `"prompt"`.
+
+        Returns
+        -------
+        None
+            May update `CPT` state if `apply_fixes` is `"yes"` or
+            `"prompt"`.
+
+        """
+        if apply_fixes not in ["yes", "no", "prompt"]:
+            msg = f"apply_fixes='{apply_fixes}' is not recognized try: "
+            msg += "'yes', 'no', or 'prompt' instead."
+            raise ValueError(msg)
+
+        # Depth of zero.
+        if np.any(self.depth == 0):
+            indices_to_delete = []
+            for index in np.argwhere(self.depth == 0):
+                msg =  "                                    Depth, qc, fs\n"             
+                msg += "A reading at zero depth was found: "
+                msg += f"{np.round(self.depth,2)}, {np.round(self.qc,2)}, {np.round(self.fs,2)}"
+                warings.warn(msg)
+
+                response = "n"
+                if apply_fixes == "prompt":
+                    response = input("Discard zero depth reading? (y/n) ")
+                
+                if response == "y" or apply_fixes = "yes":
+                    indices_to_delete.append(index)
+            
+                
+
+        # Depth increases monotonically.
+        diff = self.depth[:-1] - self.depth[1:] 
+        if np.any(diff <= 0)
+
+        # qc and fs are greater than zero at all depths.
+
+        #
+
+    def __delitem__(self, key):
+        for attr in ["depth", "qc", "fs"]:
+            setattr(self, attr, getattr(self, attr)[key])
+    
+    # def __getitem__(self, key):
