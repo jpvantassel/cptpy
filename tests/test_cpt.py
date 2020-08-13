@@ -42,6 +42,34 @@ class Test_CPT(TestCase):
             returned = getattr(cpt, ret)
             self.assertArrayEqual(expected, returned)
 
+    def test_len(self):
+        cpt = cptpy.CPT(self.dp, self.qc, self.fs)
+        expected = self.dp.size
+        returned = len(cpt)
+        self.assertEqual(expected, returned)
+
+    def test_del(self):
+        # Single
+        cpt = cptpy.CPT(self.dp, self.qc, self.fs)
+        del cpt[1]
+
+        for exp, ret in [("dp", "depth"), ("qc", "qc"), ("fs", "fs")]:
+            index = np.array([0, 2, 3, 4], dtype=int)
+            expected = np.array(getattr(self, exp))[index]
+            returned = getattr(cpt, ret)
+            self.assertArrayEqual(expected, returned)
+
+        # Multiple -> TypeError
+        cpt = cptpy.CPT(self.dp, self.qc, self.fs)
+        self.assertRaises(TypeError, cpt.__delitem__,
+                          np.array([0, 2, 4], dtype=int))
+
+    def test_getitem(self):
+        for s in [slice(0), slice(0, 2), slice(0, 4, 2)]:
+            cpt = cptpy.CPT(self.dp, self.qc, self.fs)
+            returned = cpt[s]
+            expected = cptpy.CPT(self.dp[s], self.qc[s], self.fs[s])
+            self.assertEqual(expected, returned)
 
 if __name__ == "__main__":
     unittest.main()

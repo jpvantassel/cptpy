@@ -38,6 +38,7 @@ class CPT():
         self.depth = self._prepper(depth, depth_to_m)
         self.qc = self._prepper(qc, qc_to_kpa)
         self.fs = self._prepper(fs, fs_to_kpa)
+        self.attrs = ["depth", "qc", "fs"]
 
     def _prepper(self, values, converter):
         """Prepare function inputs.
@@ -111,8 +112,6 @@ class CPT():
             pass
         # TODO (jpv): Finish sanity checks.
 
-
-
         # qc and fs are greater than zero at all depths.
 
         #
@@ -123,11 +122,59 @@ class CPT():
 
     def __delitem__(self, key):
         """Define del (i.e., del self[key]) operation."""
-        keep = np.where(np.arange(len(self)) != key)[0]
-        for attr in ["depth", "qc", "fs"]:
-            setattr(self, attr, getattr(self, attr)[keep])
+        if not isinstance(key, (int,)):
+            raise TypeError(f"key must be int, not {type(key)}")
+        index = np.arange(len(self)) != key
+        self.__getitem__(index)
     
     def __getitem__(self, key):
         """Define slice (i.e., self[key]) operation."""
         for attr in ["depth", "qc", "fs"]:
             setattr(self, attr, getattr(self, attr)[key])
+        return self
+
+    def is_similar(self, other):
+        """Determine if an object is similar to the current CPT.
+
+        Check if another object is similar to the current `CPT`, but
+        without checking if the two are identical. Comparison is based
+        on: whether the `other` object it is an instance of `CPT` and
+        its length.
+        
+        Parameters
+        ----------
+        other : object
+            Another object with the __len__ defined (i.e., `len(object)`
+            ) must be able to be run successfully.
+        
+        Returns
+        -------
+        bool
+            Indicating the result of the comparison.
+
+        """
+        if not isinstance(other, (CPT,)):
+            return False
+
+        if len(self) != len(other):
+            return False
+
+        return True
+
+    def __eq__(self, other):
+        if not self.is_similar(other):
+            return False
+
+        for attr in self.attrs:
+            my, ur = getattr(self, attr), getattr(other, attr)
+            try:
+                close = np.allclose(my, ur)
+            except:
+                # TODO (jpv): Solve for specific exception here, this is dangerous.
+                return False
+
+            if not close:
+                return False      
+
+        return True
+
