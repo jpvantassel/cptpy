@@ -69,3 +69,4 @@ class CPTu(CPT):
 
         """
         # Depth increases monotonically
+        pass

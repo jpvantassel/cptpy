@@ -57,7 +57,7 @@ class CPT():
         """
         values = np.array(values, dtype=np.double)
         # TODO (jpv): Is the assumption of an elemental function good here?
-        values = qc_to_kpa(values)
+        values = converter(values)
         return values
 
     def sanity_check(self, apply_fixes="prompt"):
@@ -101,21 +101,33 @@ class CPT():
                 if apply_fixes == "prompt":
                     response = input("Discard zero depth reading? (y/n) ")
                 
-                if response == "y" or apply_fixes = "yes":
+                if response == "y" or apply_fixes == "yes":
                     indices_to_delete.append(index)
-            
-                
+            del self[indices_to_delete]
 
         # Depth increases monotonically.
         diff = self.depth[:-1] - self.depth[1:] 
-        if np.any(diff <= 0)
+        if np.any(diff <= 0):
+            pass
+        # TODO (jpv): Finish sanity checks.
+
+
 
         # qc and fs are greater than zero at all depths.
 
         #
 
+    def __len__(self):
+        """Define len (i.e., len(self)) operation."""
+        return self.depth.size
+
     def __delitem__(self, key):
+        """Define del (i.e., del self[key]) operation."""
+        keep = np.where(np.arange(len(self)) != key)[0]
+        for attr in ["depth", "qc", "fs"]:
+            setattr(self, attr, getattr(self, attr)[keep])
+    
+    def __getitem__(self, key):
+        """Define slice (i.e., self[key]) operation."""
         for attr in ["depth", "qc", "fs"]:
             setattr(self, attr, getattr(self, attr)[key])
-    
-    # def __getitem__(self, key):
