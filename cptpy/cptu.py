@@ -5,6 +5,8 @@ from cptpy.constants import GAMMA_W
 
 
 class CPTu(CPT):
+    _ncols_in_cpt = 4
+    attrs = ["depth", "qc", "fs", "u2"]
 
     def __init__(self, depth, qc, fs, u2, gwt=None,
                  depth_to_m=lambda depth: depth, qc_to_kpa=lambda qc: qc,
@@ -36,20 +38,26 @@ class CPTu(CPT):
             `qc`, `fs`, and `u2` data respectively to convert it to
             the correct unit, default involves no modification.
 
-
-
+        Returns
+        -------
+        CPTu
+            Initialized `CPTu` object.
 
         """
         super().__init__(depth, qc, fs, depth_to_m=depth_to_m,
                          qc_to_kpa=qc_to_kpa, fs_to_kpa=fs_to_kpa)
-        self.u2 = self._prepper(u2, u2_to_kpa)
-        self._u0 = None
-        self.gwt = float(gwt) if gwt is not None else None
+        self._cpt[:, 3] = self._prep(u2, u2_to_kpa)
+        # self._u0 = None
+        # self.gwt = float(gwt) if gwt is not None else None
+
+    @property
+    def u2(self):
+        return self._cpt[:, 3]
 
     @property
     def u0(self):
         """Hydrostatic pore water pressure."""
-        try:    
+        try:
             self._u0 = (self.depth - self.gwt)*GAMMA_W
         except AttributeError:
             msg = "The calculation you requested requires the definition "
@@ -59,11 +67,11 @@ class CPTu(CPT):
             raise ValueError(msg)
         else:
             self._u0[self.depth <= self.gwt] = 0
-        return self._u0 
+        return self._u0
 
     def sanity_check(self):
         """Perform's various sanity checks on the provided CPTu data.
-        
+
         Sanity checks include: depth increases monotonically, 2)
 
 

@@ -41,6 +41,15 @@ class Test_CPT(TestCase):
             expected = func(np.array(getattr(self, exp)))
             returned = getattr(cpt, ret)
             self.assertArrayEqual(expected, returned)
+    
+    def test_sanity_check(self):
+        # Depths less than zero
+        depth = [-0.1, 0, 0.1, 0.2, 0.3]
+        cpt = cptpy.CPT(depth, self.qc, self.fs)
+        sane_cpt = cpt.sanity_check(apply_fixes="yes")
+
+        self.assertEqual(cpt[2:], sane_cpt)
+
 
     def test_len(self):
         cpt = cptpy.CPT(self.dp, self.qc, self.fs)
