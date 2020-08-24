@@ -45,10 +45,29 @@ class Test_CPT(TestCase):
     def test_sanity_check(self):
         # Depths less than zero
         depth = [-0.1, 0, 0.1, 0.2, 0.3]
-        cpt = cptpy.CPT(depth, self.qc, self.fs)
-        sane_cpt = cpt.sanity_check(apply_fixes="yes")
+        returned = cptpy.CPT(depth, self.qc, self.fs)
+        returned.sanity_check(apply_fixes="yes")
 
-        self.assertEqual(cpt[2:], sane_cpt)
+        expected = cptpy.CPT(depth, self.qc, self.fs)[2:]
+        self.assertEqual(expected, returned)
+
+        # Depth out of order
+        depth = [0.1, 0.2, 0.3, 0.5, 0.4]
+        returned = cptpy.CPT(depth, self.qc, self.fs)
+        returned.sanity_check(apply_fixes="yes")
+
+        expected = cptpy.CPT(depth, self.qc, self.fs)
+        expected._cpt = expected._cpt[[0, 1, 2, 4, 3], :]
+        self.assertEqual(expected, returned)
+
+        # Duplicate depth measurement
+        depth = [0.1,0.2,0.2,0.3,0.4]
+        returned = cptpy.CPT(depth, self.qc, self.fs)
+        returned.sanity_check(apply_fixes="yes")
+
+        expected = cptpy.CPT(depth, self.qc, self.fs)
+        del expected[2]
+        self.assertEqual(expected, returned)
 
 
     def test_len(self):
@@ -67,11 +86,6 @@ class Test_CPT(TestCase):
             expected = np.array(getattr(self, exp))[index]
             returned = getattr(cpt, ret)
             self.assertArrayEqual(expected, returned)
-
-        # Multiple -> TypeError
-        cpt = cptpy.CPT(self.dp, self.qc, self.fs)
-        self.assertRaises(TypeError, cpt.__delitem__,
-                          np.array([0, 2, 4], dtype=int))
 
     def test_getitem(self):
         for s in [slice(0), slice(0, 2), slice(0, 4, 2)]:

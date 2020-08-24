@@ -122,9 +122,8 @@ class CPT():
             indices_to_delete = []
             problematic_indices = np.argwhere(self.depth <= 0)
             for index in problematic_indices:
-                msg = "                                    Depth, qc, fs\n"
-                msg += "A reading at zero depth was found: "
-                msg += f"{np.round(self._cpt[index, :])}"
+                msg = "A reading at a depth less than zero was found: "
+                msg += f"{np.round(self._cpt[index])}"
                 warnings.warn(msg)
 
                 response = "n"
@@ -134,19 +133,43 @@ class CPT():
                 if response == "y" or apply_fixes == "yes":
                     indices_to_delete.append(index)
 
-            print(self._cpt.shape)
-            print(indices_to_delete)
-            self._cpt = self._cpt[indices_to_delete, :]
+            del self[indices_to_delete]
 
         # Depth increases monotonically.
-        diff = self.depth[:-1] - self.depth[1:]
+        diff = self.depth[1:] - self.depth[:-1]
         if np.any(diff <= 0):
-            pass
-        # TODO (jpv): Finish sanity checks.
+            warnings.warn("Depths readings do not increase monotonically.")
+
+            response = "n"
+            if apply_fixes == "prompt":
+                response = input("Sort readings by depth? (y/n) ")
+            
+            if response == "y" or apply_fixes == "yes":
+                self._cpt = self._cpt[np.argsort(self.depth), :]
+
+        # No duplicate depth measurements.
+        diff = self.depth[1:] - self.depth[:-1]
+        if np.any(diff < 1E-6):
+
+            indices_to_delete = []
+            problematic_indices = np.argwhere(diff < 1E-6)
+            for index in problematic_indices:
+                msg = "A duplicate depth reading has been found: "
+                msg += f"{np.round(self._cpt[index])}"
+                warnings.warn(msg)
+
+                response = "n"
+                if apply_fixes == "prompt":
+                    response = input("Discard extra depth reading? (y/n) ")
+
+                if response == "y" or apply_fixes == "yes":
+                    indices_to_delete.append(index+1)
+
+            del self[indices_to_delete]
 
         # qc and fs are greater than zero at all depths.
+        # TODO (jpv): Continue with sanity checks here.
 
-        #
 
     def __len__(self):
         """Define len (i.e., len(self)) operation."""
@@ -154,10 +177,7 @@ class CPT():
 
     def __delitem__(self, key):
         """Define del (i.e., del self[key]) operation."""
-        if not isinstance(key, (int,)):
-            raise TypeError(f"key must be int, not {type(key)}")
-        index = np.arange(len(self)) != key
-        self._cpt = self._cpt[index, :]
+        self._cpt = np.delete(self._cpt, key, axis=0)
 
     def __getitem__(self, key):
         """Define slice (i.e., self[key]) operation."""
