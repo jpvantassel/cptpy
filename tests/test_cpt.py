@@ -1,5 +1,7 @@
 """Tests for CPT class"""
 
+import warnings
+
 import numpy as np
 
 import cptpy
@@ -43,32 +45,56 @@ class Test_CPT(TestCase):
             self.assertArrayEqual(expected, returned)
     
     def test_sanity_check(self):
-        # Depths less than zero
-        depth = [-0.1, 0, 0.1, 0.2, 0.3]
-        returned = cptpy.CPT(depth, self.qc, self.fs)
-        returned.sanity_check(apply_fixes="yes")
+        with warnings.catch_warnings():
+            warnings.simplefilter("ignore")
+            
+            # Depths less than zero
+            depth = [-0.1, 0, 0.1, 0.2, 0.3]
+            returned = cptpy.CPT(depth, self.qc, self.fs)
+            returned.sanity_check(apply_fixes="yes")
 
-        expected = cptpy.CPT(depth, self.qc, self.fs)[2:]
-        self.assertEqual(expected, returned)
+            expected = cptpy.CPT(depth, self.qc, self.fs)[2:]
+            self.assertEqual(expected, returned)
 
-        # Depth out of order
-        depth = [0.1, 0.2, 0.3, 0.5, 0.4]
-        returned = cptpy.CPT(depth, self.qc, self.fs)
-        returned.sanity_check(apply_fixes="yes")
+            # Depth out of order
+            depth = [0.1, 0.2, 0.3, 0.5, 0.4]
+            returned = cptpy.CPT(depth, self.qc, self.fs)
+            returned.sanity_check(apply_fixes="yes")
 
-        expected = cptpy.CPT(depth, self.qc, self.fs)
-        expected._cpt = expected._cpt[[0, 1, 2, 4, 3], :]
-        self.assertEqual(expected, returned)
+            expected = cptpy.CPT(depth, self.qc, self.fs)
+            expected._cpt = expected._cpt[[0, 1, 2, 4, 3], :]
+            self.assertEqual(expected, returned)
 
-        # Duplicate depth measurement
-        depth = [0.1,0.2,0.2,0.3,0.4]
-        returned = cptpy.CPT(depth, self.qc, self.fs)
-        returned.sanity_check(apply_fixes="yes")
+            # Duplicate depth measurement
+            depth = [0.1,0.2,0.2,0.3,0.4]
+            returned = cptpy.CPT(depth, self.qc, self.fs)
+            returned.sanity_check(apply_fixes="yes")
 
-        expected = cptpy.CPT(depth, self.qc, self.fs)
-        del expected[2]
-        self.assertEqual(expected, returned)
+            expected = cptpy.CPT(depth, self.qc, self.fs)
+            del expected[2]
+            self.assertEqual(expected, returned)
 
+            # qc and/or fs less than zero
+            troublesome_values = [-1, 0]
+            expected = cptpy.CPT(self.dp, self.qc, self.fs)
+            del expected[1]
+
+            for value in troublesome_values:
+                qc = np.array(self.qc)
+                qc[1] = value            
+                returned = cptpy.CPT(self.dp, qc, self.fs)
+                returned.sanity_check(apply_fixes="yes")
+                self.assertEqual(expected, returned)
+
+                fs = np.array(self.fs)
+                fs[1] = value
+                returned = cptpy.CPT(self.dp, self.qc, fs)
+                returned.sanity_check(apply_fixes="yes")
+                self.assertEqual(expected, returned)
+
+                returned = cptpy.CPT(self.dp, qc, fs)
+                returned.sanity_check(apply_fixes="yes")
+                self.assertEqual(expected, returned)
 
     def test_len(self):
         cpt = cptpy.CPT(self.dp, self.qc, self.fs)

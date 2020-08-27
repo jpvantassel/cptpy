@@ -94,7 +94,7 @@ class CPT():
 
         Sanity checks include: depth values are strictly greater than
         zero, depth values increases monotonically, `qc` and `fs` are
-        greater than zero at all depths,  
+        greater than zero at all depths.
 
         Parameters
         ----------
@@ -168,8 +168,22 @@ class CPT():
             del self[indices_to_delete]
 
         # qc and fs are greater than zero at all depths.
-        # TODO (jpv): Continue with sanity checks here.
+        if np.any(self._cpt <= 0):
+            indices_to_delete = []
+            problematic_indices = np.argwhere(np.logical_or(self._cpt[:, 1] <= 0, self._cpt[:, 2] <= 0))
+            for index in problematic_indices:
+                msg = "A qc and/or fs value was found to be less than or equal to zero: "
+                msg += f"{np.round(self._cpt[index],1)}"
+                warnings.warn(msg)
 
+                response = "n"
+                if apply_fixes == "prompt":
+                    response = input("Discard reading? (y/n) ")
+
+                if response == "y" or apply_fixes == "yes":
+                    indices_to_delete.append(index)
+
+            del self[indices_to_delete]
 
     def __len__(self):
         """Define len (i.e., len(self)) operation."""
