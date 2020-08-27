@@ -185,6 +185,16 @@ class CPT():
 
             del self[indices_to_delete]
 
+    @property
+    def rf(self):
+        """Alias for `friction_ratio`."""
+        return self.friction_ratio
+
+    @property
+    def friction_ratio(self):
+        """CPT friction ratio (Rf)."""
+        return (self.fs / self.qc) * 100
+
     def __len__(self):
         """Define len (i.e., len(self)) operation."""
         return self._cpt.shape[0]

@@ -47,8 +47,7 @@ class CPTu(CPT):
         super().__init__(depth, qc, fs, depth_to_m=depth_to_m,
                          qc_to_kpa=qc_to_kpa, fs_to_kpa=fs_to_kpa)
         self._cpt[:, 3] = self._prep(u2, u2_to_kpa)
-        # self._u0 = None
-        # self.gwt = float(gwt) if gwt is not None else None
+        self.gwt = float(gwt) if gwt is not None else None
 
     @property
     def u2(self):
@@ -69,12 +68,30 @@ class CPTu(CPT):
             self._u0[self.depth <= self.gwt] = 0
         return self._u0
 
-    def sanity_check(self):
-        """Perform's various sanity checks on the provided CPTu data.
+    @property
+    def du(self):
+        """Excess pore water pressure."""
+        return self.u2 - self.u0
 
-        Sanity checks include: depth increases monotonically, 2)
+    def qt(self, an=0.8):
+        """Corrected total cone tip resistance.
 
-
+        Parameters
+        ---------
+        an : float, optional
+            Net area ratio, according to the Robertson-Gregg CPT Guide
+            (2012) `an` can vary between 0.7 - 0.85. ASTM D5778
+            recommends 0.8. The ASTM recommendation is provided as the
+            default value.
+        
         """
-        # Depth increases monotonically
-        pass
+        an = float(an)
+        if an < 0.7 or an > 0.85:
+            msg = "an is outside the recommended range of 0.7-0.85."
+            warnings.warn(msg)
+        return self.qc + self.u2 * (1-an)
+
+    @property
+    def ft(self):
+        """Corrected total sleeve friction, alias for fs."""
+        return self.fs
