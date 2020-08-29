@@ -2,3 +2,4 @@
 
 GRAVITY = 9.807 # m/s2
 GAMMA_W = 9.807 # kN/m3
+PA = 101.325 # kPa

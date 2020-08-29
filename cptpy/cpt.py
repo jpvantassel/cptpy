@@ -4,6 +4,8 @@ import warnings
 
 import numpy as np
 
+from constants import PA
+
 
 class CPT():
     _ncols_in_cpt = 3
@@ -194,6 +196,96 @@ class CPT():
     def friction_ratio(self):
         """CPT friction ratio (Rf)."""
         return (self.fs / self.qc) * 100
+
+    def isbt(self, procedure="Robertson 2010"):
+        """Calculate the Non-Normalized Soil Behavior Type Index (Isbt).
+
+        Parameters
+        ----------
+        procedure : {'Robertson 2010'}, optional
+            Define the procedure for defining the Isbt, default is
+            Robertson (2010). Full citations provided below.
+
+        Return
+        ------
+        ndarray
+            Containing Isbt at each depth.
+        
+        References
+        ----------
+        Robertson, P.K., 2010. Soil behaviour type from the CPT: an
+        update, in: 2nd International Symposium on Cone Penetration
+        Testing. Presented at the CPT ’10, Huntington Beach, CA, USA,
+        pp. 575–583.
+
+        """
+        register = {"Robertson 2010": self._isbt_robertson_2010}
+        return register[procedure]()
+
+    def _isbt_robertson_2010(self):
+        """Compute Isbt using Robertson (2010)."""
+        a = (3.47 - np.log(self.qc/PA)))
+        b = (1.22 + np.log(self.rf))
+        isbt = np.sqrt(a*a + b*b)
+        return isbt
+
+    def sbt(self, procedure="Robertson 2010"):
+        """Determine the Non-Normalized Soil Behavior Type (SBT).
+
+        Parameters
+        ----------
+        procedure : {'Robertson 2010'}, optional
+            Define the procedure for defining the SBT, default is
+            Robertson (2010). Full citations provided below.
+
+        Return
+        ------
+        tuple
+            Of the form `(Isbt, SBT)` where `Isbt` is an `ndarray` of
+            Soil Behavior Type Index values and `SBT` is an `ndarray` of
+            Soil Behavior Types.
+
+        References
+        ----------
+        Robertson, P.K., 2010. Soil behaviour type from the CPT: an
+        update, in: 2nd International Symposium on Cone Penetration
+        Testing. Presented at the CPT ’10, Huntington Beach, CA, USA,
+        pp. 575–583.
+
+        """
+        register = {"Robertson 2010": CPT._isbt_to_sbt_robertson_2010}
+        decoder = register[procedure]
+
+
+
+
+        
+        
+        
+        return isbt
+
+    def _isbt_to_sbt_robertson_2010(self):
+        """Translate isbt to sbt."""
+        zone = np.empty(len(self), dtype=int) 
+        sbt = np.empty(len(self), dtype=str)
+        for i, (qc, rf) in enumerate(zip(self.qc, self.rf, )):
+            qc_on_pa = qc/PA
+            eqa = qc/PA >= 1/(0.006*(rf-0.9) - 0.004*(rf-0.9)*(rf-0.9) - 0.005)
+            if rf>1.5 and rf<4.5 and eqa:
+                zone[i] = 8
+                sbt[i] = "Stiff Sand to Clayed Sand"
+            elif rf>4.5 and eqa:
+                zone[i] = 9
+                sbt[i] = "Stiff Fine-Grained"
+            elif qc_on_pa < 12*np.exp(-1.5*rf):
+                zone[i] = 1
+                sbt[i] = "Sensitive Fine-Grained"
+            elif 
+            
+                
+
+
+
 
     def __len__(self):
         """Define len (i.e., len(self)) operation."""

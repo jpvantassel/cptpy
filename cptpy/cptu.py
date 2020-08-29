@@ -95,3 +95,5 @@ class CPTu(CPT):
     def ft(self):
         """Corrected total sleeve friction, alias for fs."""
         return self.fs
+
+    
