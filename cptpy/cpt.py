@@ -253,40 +253,55 @@ class CPT():
         pp. 575–583.
 
         """
+        isbt = self.isbt(procedure=procedure)
+
         register = {"Robertson 2010": CPT._isbt_to_sbt_robertson_2010}
-        decoder = register[procedure]
+        decoder = register[procedure]             
+        sbt = decoder(isbt)        
 
+        return (isbt, sbt)
 
-
-
-        
-        
-        
-        return isbt
-
-    def _isbt_to_sbt_robertson_2010(self):
+    def _isbt_to_sbt_robertson_2010(self, isbt):
         """Translate isbt to sbt."""
         zone = np.empty(len(self), dtype=int) 
         sbt = np.empty(len(self), dtype=str)
-        for i, (qc, rf) in enumerate(zip(self.qc, self.rf, )):
-            qc_on_pa = qc/PA
-            eqa = qc/PA >= 1/(0.006*(rf-0.9) - 0.004*(rf-0.9)*(rf-0.9) - 0.005)
+        rfs = self.rf
+        eqas = qc/PA >=1/(0.006*(rfs-0.9) - 0.004*(rfs-0.9)*(rfs-0.9) - 0.005)
+        qc_on_pas = qc/PA
+        for i, (qc_on_pa, rf, eqa) in enumerate(zip(qc_on_pas, rfs, eqas)):             
             if rf>1.5 and rf<4.5 and eqa:
                 zone[i] = 8
                 sbt[i] = "Stiff Sand to Clayed Sand"
             elif rf>4.5 and eqa:
                 zone[i] = 9
                 sbt[i] = "Stiff Fine-Grained"
-            elif qc_on_pa < 12*np.exp(-1.5*rf):
+            elif qc_on_pa < 12*np.exp(-1.4*rf):
                 zone[i] = 1
                 sbt[i] = "Sensitive Fine-Grained"
-            elif 
+            elif isbt > 3.6:
+                zone[i] = 2
+                sbt[i] = "Organic Soils"
+            elif isbt > 2.95:
+                zone[i] = 3
+                sbt[i] = "Clays"
+            elif isbt > 2.6:
+                zone[i] = 4
+                sbt[i] = "Silt Mixtures"
+            elif isbt > 2.05:
+                zone[i] = 5
+                sbt[i] = "Sand Mixtures"
+            elif isbt > 1.31:
+                zone[i] = 6
+                sbt[i] = "Sands"
+            elif isbt<1.31:
+                zone[i] = 7
+                sbt[i] = "Gravelly to Dense Sand"
+            else:
+                zone[i] = 0
+                sbt[i] = "Unknown Soil Type"
+                warnings.warn(f"Unknown soil type encountered at index={i}")
+        return (zone, sbt)
             
-                
-
-
-
-
     def __len__(self):
         """Define len (i.e., len(self)) operation."""
         return self._cpt.shape[0]

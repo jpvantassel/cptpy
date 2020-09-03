@@ -5,3 +5,5 @@ __pycache__
 scratch
 build
 dist
+*.ipynb_checkpoints
+*.png
