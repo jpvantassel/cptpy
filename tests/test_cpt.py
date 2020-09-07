@@ -3,15 +3,19 @@
 import warnings
 
 import numpy as np
+import pandas as pd
+import matplotlib.pyplot as plt
 
 import cptpy
-from testtools import TestCase, unittest
+from testtools import TestCase, unittest, get_full_path
 
 
 class Test_CPT(TestCase):
 
     @classmethod
     def setUpClass(cls):
+        cls.full_path = get_full_path(__file__)
+
         cls.dp = np.array([0.1, 0.2, 0.3, 0.4, 0.5])
         cls.qc = np.array([10, 10.1, 10.3, 10.2, 10.5])*1000
         cls.fs = np.array([100., 120, 130, 110, 140])
@@ -95,6 +99,24 @@ class Test_CPT(TestCase):
                 returned = cptpy.CPT(self.dp, qc, fs)
                 returned.sanity_check(apply_fixes="yes")
                 self.assertEqual(expected, returned)
+
+    # def test_rf(self):
+    #     df = pd.read_csv(self.full_path + "/data/isbt/input.csv")
+    #     cpt = cptpy.CPT(depth=df.depth, qc=df.qc, fs=df.fs)
+    #     returned = cpt.friction_ratio
+    #     df2 = pd.read_csv(self.full_path + "/data/isbt/results.csv")
+    #     expected = df2.fr.to_numpy()
+    #     self.assertArrayAlmostEqual(expected, returned, places=2)
+
+    def test_isbt_robertson_2010(self):
+        # Based on Figure 3 from Robertson 2010
+        df = pd.read_csv(self.full_path + "/data/isbt/input.csv")
+        cpt = cptpy.CPT(depth=df.depth, qc=df.qc, fs=df.fs)
+        returned = cpt.isbt(procedure="Robertson 2010")
+
+        df2 = pd.read_csv(self.full_path + "/data/isbt/isbt.csv")
+        expected = df2.isbt.to_numpy()
+        self.assertArrayAlmostEqual(expected, returned, places=2)
 
     def test_len(self):
         cpt = cptpy.CPT(self.dp, self.qc, self.fs)

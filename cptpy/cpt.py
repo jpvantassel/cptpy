@@ -4,7 +4,7 @@ import warnings
 
 import numpy as np
 
-from constants import PA
+from .constants import PA
 
 
 class CPT():
@@ -77,19 +77,6 @@ class CPT():
         # TODO (jpv): Is the assumption of an elemental function good here?
         values = converter(values)
         return values
-
-    def _safety_check(self):
-        """Check state of `CPT`.
-
-        Perform's various checks on `CPT` including: length of all
-        `self.attrs` are equal, 
-
-        """
-        # Check all attributes are the same length.
-        master_length = len(self)
-        for attr in self.attrs:
-            if len(getattr(self, attr)) != master_length:
-                raise ValueError("Length of attributes are inconsistent.")
 
     def sanity_check(self, apply_fixes="prompt"):
         """Perform's various sanity checks on the provided `CPT` data.
@@ -224,8 +211,8 @@ class CPT():
 
     def _isbt_robertson_2010(self):
         """Compute Isbt using Robertson (2010)."""
-        a = (3.47 - np.log(self.qc/PA)))
-        b = (1.22 + np.log(self.rf))
+        a = (3.47 - np.log10(self.qc/PA))
+        b = (1.22 + np.log10(self.rf))
         isbt = np.sqrt(a*a + b*b)
         return isbt
 
