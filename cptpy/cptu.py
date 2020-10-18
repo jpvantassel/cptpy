@@ -84,6 +84,13 @@ class CPTu(CPT):
             recommends 0.8. The ASTM recommendation is provided as the
             default value.
         
+        References
+        ----------
+        Robertson, P. K. (2012). The James K. Mitchell Lecture:
+        Interpretation of in-situ tests–some insights. Proc. 4th Int.
+        Conf. on Geotechnical and Geophysical Site
+        Characterization–ISC’4., 22.
+
         """
         an = float(an)
         if an < 0.7 or an > 0.85:
