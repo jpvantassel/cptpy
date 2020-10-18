@@ -4,7 +4,7 @@ import warnings
 
 import numpy as np
 
-from .constants import PA
+from .constants import PA, GAMMA_W
 
 
 class CPT():
@@ -132,7 +132,7 @@ class CPT():
             response = "n"
             if apply_fixes == "prompt":
                 response = input("Sort readings by depth? (y/n) ")
-            
+
             if response == "y" or apply_fixes == "yes":
                 self._cpt = self._cpt[np.argsort(self.depth), :]
 
@@ -159,7 +159,8 @@ class CPT():
         # qc and fs are greater than zero at all depths.
         if np.any(self._cpt <= 0):
             indices_to_delete = []
-            problematic_indices = np.argwhere(np.logical_or(self._cpt[:, 1] <= 0, self._cpt[:, 2] <= 0))
+            problematic_indices = np.argwhere(np.logical_or(
+                self._cpt[:, 1] <= 0, self._cpt[:, 2] <= 0))
             for index in problematic_indices:
                 msg = "A qc and/or fs value was found to be less than or equal to zero: "
                 msg += f"{np.round(self._cpt[index],1)}"
@@ -197,7 +198,7 @@ class CPT():
         ------
         ndarray
             Containing Isbt at each depth.
-        
+
         References
         ----------
         Robertson, P.K., 2010. Soil behavior type from the CPT: an
@@ -243,23 +244,23 @@ class CPT():
         isbt = self.isbt(procedure=procedure)
 
         register = {"Robertson 2010": CPT._isbt_to_sbt_robertson_2010}
-        decoder = register[procedure]             
-        sbt = decoder(isbt)        
+        decoder = register[procedure]
+        sbt = decoder(isbt)
 
         return (isbt, sbt)
 
     def _isbt_to_sbt_robertson_2010(self, isbt):
         """Translate isbt to sbt."""
-        zone = np.empty(len(self), dtype=int) 
+        zone = np.empty(len(self), dtype=int)
         sbt = np.empty(len(self), dtype=str)
         rfs = self.rf
-        eqas = qc/PA >=1/(0.006*(rfs-0.9) - 0.004*(rfs-0.9)*(rfs-0.9) - 0.005)
+        eqas = qc/PA >= 1/(0.006*(rfs-0.9) - 0.004*(rfs-0.9)*(rfs-0.9) - 0.005)
         qc_on_pas = qc/PA
-        for i, (qc_on_pa, rf, eqa) in enumerate(zip(qc_on_pas, rfs, eqas)):             
-            if rf>1.5 and rf<4.5 and eqa:
+        for i, (qc_on_pa, rf, eqa) in enumerate(zip(qc_on_pas, rfs, eqas)):
+            if rf > 1.5 and rf < 4.5 and eqa:
                 zone[i] = 8
                 sbt[i] = "Stiff Sand to Clayed Sand"
-            elif rf>4.5 and eqa:
+            elif rf > 4.5 and eqa:
                 zone[i] = 9
                 sbt[i] = "Stiff Fine-Grained"
             elif qc_on_pa < 12*np.exp(-1.4*rf):
@@ -280,7 +281,7 @@ class CPT():
             elif isbt > 1.31:
                 zone[i] = 6
                 sbt[i] = "Sands"
-            elif isbt<1.31:
+            elif isbt < 1.31:
                 zone[i] = 7
                 sbt[i] = "Gravelly to Dense Sand"
             else:
@@ -288,7 +289,7 @@ class CPT():
                 sbt[i] = "Unknown Soil Type"
                 warnings.warn(f"Unknown soil type encountered at index={i}")
         return (zone, sbt)
-            
+
     def __len__(self):
         """Define len (i.e., len(self)) operation."""
         return self._cpt.shape[0]

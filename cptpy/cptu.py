@@ -103,4 +103,38 @@ class CPTu(CPT):
         """Corrected total sleeve friction, alias for fs."""
         return self.fs
 
-    
+    def unit_weight(self, procedure="Robertson and Cabal 2010"):
+        """Estimate soil unit weight.
+
+        Parameters
+        ----------
+        procedure = {"Robertson and Cabal 2010", "Robertson 2010"}, optional
+            Select the desired procedure for estimating soil unit
+            weight.
+        
+        Returns
+        -------
+        ndarray
+            Containing the estimated unit weights.
+
+        References
+        ----------
+        Robertson, P. K., & Cabal, K. L. (2010). Estimating soil unit
+        weight from CPT. 2nd International Symposium on Cone Penetration
+        Testing, 8.
+
+        Notes
+        -----
+        Robertson and Cabal (2010) is regularly cited as Robertson
+        (2010) (e.g., in Robertson-Gregg Guide to CPT testing for
+        Geotechnical Engineering 5th ed), so Robertson (2010) is
+        included here as an alias to Robertson and Cabal (2010).
+
+        """
+        register = {"Robertson 2010": self._unitweight_robertson_and_cabal_2010,
+                    "Robertson and Cabal 2010": self._unitweight_robertson_and_cabal_2010}
+        return register[procedure]()
+
+    def _unitweight_robertson_and_cabal_2010(self, gs=2.65):
+        """Estimate unit weight from Robertson and Cabal (2010) eq2."""
+        return GAMMA_W*(0.27*np.log(self.rf) + 0.36*np.log(self.qt/PA) + 1.236)*gs/2.65
