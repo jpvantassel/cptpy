@@ -7,3 +7,6 @@ build
 dist
 *.ipynb_checkpoints
 *.png
+.tox
+tests/htmlcov
+tests/.coverage
