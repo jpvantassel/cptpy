@@ -4,7 +4,6 @@ import warnings
 
 import numpy as np
 import pandas as pd
-import matplotlib.pyplot as plt
 
 import cptpy
 from testtools import TestCase, unittest, get_full_path
@@ -110,11 +109,11 @@ class Test_CPT(TestCase):
 
     def test_isbt_robertson_2010(self):
         # Based on Figure 3 from Robertson 2010
-        df = pd.read_csv(self.full_path + "/data/isbt/input.csv")
+        df = pd.read_csv(self.full_path + "data/isbt/input.csv")
         cpt = cptpy.CPT(depth=df.depth, qc=df.qc, fs=df.fs)
         returned = cpt.isbt(procedure="Robertson 2010")
 
-        df2 = pd.read_csv(self.full_path + "/data/isbt/isbt.csv")
+        df2 = pd.read_csv(self.full_path + "data/isbt/isbt.csv")
         expected = df2.isbt.to_numpy()
         self.assertArrayAlmostEqual(expected, returned, places=2)
 

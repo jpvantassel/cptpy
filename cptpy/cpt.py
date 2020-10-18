@@ -200,7 +200,7 @@ class CPT():
         
         References
         ----------
-        Robertson, P.K., 2010. Soil behaviour type from the CPT: an
+        Robertson, P.K., 2010. Soil behavior type from the CPT: an
         update, in: 2nd International Symposium on Cone Penetration
         Testing. Presented at the CPT ’10, Huntington Beach, CA, USA,
         pp. 575–583.
@@ -234,7 +234,7 @@ class CPT():
 
         References
         ----------
-        Robertson, P.K., 2010. Soil behaviour type from the CPT: an
+        Robertson, P.K., 2010. Soil behavior type from the CPT: an
         update, in: 2nd International Symposium on Cone Penetration
         Testing. Presented at the CPT ’10, Huntington Beach, CA, USA,
         pp. 575–583.
@@ -315,8 +315,7 @@ class CPT():
         Parameters
         ----------
         other : object
-            Another object with the __len__ defined (i.e., `len(object)`
-            ) must be able to be run successfully.
+            Object to be compared.
 
         Returns
         -------
