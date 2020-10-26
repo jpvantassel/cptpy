@@ -2,6 +2,8 @@
 
 import unittest
 
+import numpy as np
+
 def get_full_path(path):
     if path.count("/") > 1:
         file_name = path.split(r"/")[-1]
@@ -18,12 +20,19 @@ class TestCase(unittest.TestCase):
             self.assertAlmostEqual(a, b, **kwargs)
 
     def assertArrayEqual(self, array1, array2):
-        self.assertListEqual(array1.tolist(), array2.tolist())
+        try:
+            self.assertTrue(np.equal(array1, array2).all())
+        except AssertionError as e:
+            msg = f"\nExpected:\n{array1}\nReturned:\n{array2})"
+            raise AssertionError(msg) from e
 
     def assertArrayAlmostEqual(self, array1, array2, **kwargs):
-        if array1.size != array2.size:
-            self.assertEqual(array1.size, array2.size)
-        array1 = array1.flatten()
-        array2 = array2.flatten()
-        for v1, v2 in zip(array1, array2):
-            self.assertAlmostEqual(v1, v2, **kwargs)
+        if kwargs.get("places", False):
+            kwargs["atol"] = 1/(10**kwargs["places"])
+            del kwargs["places"]
+
+        try:
+            self.assertTrue(np.allclose(array1, array2, **kwargs))
+        except AssertionError as e:
+            msg = f"\nExpected:\n{array1}\nReturned:\n{array2})"
+            raise AssertionError(msg) from e
