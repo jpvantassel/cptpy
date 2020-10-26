@@ -1,7 +1,9 @@
 """CPTu class definition."""
 
+import numpy as np
+
 from cptpy import CPT
-from cptpy.constants import GAMMA_W
+from cptpy.constants import GAMMA_W, PA
 
 
 class CPTu(CPT):
@@ -137,4 +139,4 @@ class CPTu(CPT):
 
     def _unitweight_robertson_and_cabal_2010(self, gs=2.65):
         """Estimate unit weight from Robertson and Cabal (2010) eq2."""
-        return GAMMA_W*(0.27*np.log(self.rf) + 0.36*np.log(self.qt/PA) + 1.236)*gs/2.65
+        return GAMMA_W*(0.27*np.log10(self.rf) + 0.36*np.log10(self.qt()/PA) + 1.236)*gs/2.65
