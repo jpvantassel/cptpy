@@ -16,8 +16,8 @@ pore water pressure readings, respectively.
 `cptpy` implements the work of many others. To acknowledge their original work,
 inline citations are provided throughout the documentation in the (Author, Year)
 format. We strongly encourage users to read, understand, and provide direct
-reference to original work. To facilitate this process full
-citations are provided below.
+reference to original work. To facilitate this, full citations are provided
+below.
 
 > Robertson, P. K. (2010). Soil behaviour type from the CPT: an update. 2nd
 > International Symposium on Cone Penetration Testing, 2, 575–583.
