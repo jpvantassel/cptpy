@@ -1,16 +1,12 @@
 """CPTu class definition."""
 
-import numpy as np
-
 from .cpt import CPT
-from .constants import GAMMA_W, PA
-from .register import UnitWeightRegistry
 
 class CPTu(CPT):
-    _ncols_in_cpt = 5
-    attrs = ["depth", "qc", "fs", "u2", "unit_weight"]
+    _ncols_in_cpt = 4
+    attrs = ["depth", "qc", "fs", "u2"]
 
-    def __init__(self, depth, qc, fs, u2, gwt=None,
+    def __init__(self, depth, qc, fs, u2,
                  depth_to_m=lambda depth: depth, qc_to_kpa=lambda qc: qc,
                  fs_to_kpa=lambda fs: fs, u2_to_kpa=lambda fs: fs):
         """Initialize a `CPTu` object from `qc`, `fs`, and `u2`.
@@ -32,9 +28,6 @@ class CPTu(CPT):
             Measured pore water pressure in kPa. If data are not in
             units of kPa pass a conversion function using the
             `u2_to_kPa` parameter.
-        gwt : float, optional
-            Depth to the ground water table in meters, default is `None`
-            indicating it will be requested if/when it is required.
         depth_to_m, qc_to_kpa, fs_to_kpa, u2_to_kpa : function, optional
             User defined conversion function(s) applied to the `depth`,
             `qc`, `fs`, and `u2` data respectively to convert it to
@@ -49,26 +42,10 @@ class CPTu(CPT):
         super().__init__(depth, qc, fs, depth_to_m=depth_to_m,
                          qc_to_kpa=qc_to_kpa, fs_to_kpa=fs_to_kpa)
         self._cpt[:, 3] = self._prep(u2, u2_to_kpa)
-        self.gwt = float(gwt) if gwt is not None else None
 
     @property
     def u2(self):
         return self._cpt[:, 3]
-
-    @property
-    def u0(self):
-        """Hydrostatic pore water pressure."""
-        try:
-            self._u0 = (self.depth - self.gwt)*GAMMA_W
-        except AttributeError:
-            msg = "The calculation you requested requires the definition "
-            msg += "of hydrostatic pore water pressure (u0), however the "
-            msg += "ground water table (gwt) is not defined. Define `gwt` "
-            msg += "before re-attempting."
-            raise ValueError(msg)
-        else:
-            self._u0[self.depth <= self.gwt] = 0
-        return self._u0
 
     @property
     def du(self):
@@ -85,13 +62,13 @@ class CPTu(CPT):
             (2012) `an` can vary between 0.7 - 0.85. ASTM D5778
             recommends 0.8. The ASTM recommendation is provided as the
             default value.
-        
+
         References
         ----------
         Robertson, P. K. (2012). The James K. Mitchell Lecture:
         Interpretation of in-situ tests–some insights. Proc. 4th Int.
         Conf. on Geotechnical and Geophysical Site
-        Characterization–ISC’4., 22.
+        Characterization–ISC’4.
 
         """
         an = float(an)
@@ -104,33 +81,3 @@ class CPTu(CPT):
     def ft(self):
         """Corrected total sleeve friction, alias for fs."""
         return self.fs
-
-    def unit_weight(self, procedure="Robertson and Cabal 2010", gs=2.65):
-        """Estimate soil unit weight.
-
-        Parameters
-        ----------
-        procedure = {"Robertson and Cabal 2010", "Robertson 2010"}, optional
-            Select the desired procedure for estimating soil unit
-            weight.
-        
-        Returns
-        -------
-        ndarray
-            Containing the estimated unit weights.
-
-        References
-        ----------
-        Robertson, P. K., & Cabal, K. L. (2010). Estimating soil unit
-        weight from CPT. 2nd International Symposium on Cone Penetration
-        Testing, 8.
-
-        Notes
-        -----
-        Robertson and Cabal (2010) is regularly cited as Robertson
-        (2010) (e.g., in Robertson-Gregg Guide to CPT testing for
-        Geotechnical Engineering 5th ed), so Robertson (2010) is
-        included here as an alias to Robertson and Cabal (2010).
-
-        """
-        return UnitWeightRegistry[procedure](self, gs=2.65)

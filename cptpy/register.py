@@ -3,7 +3,7 @@
 from abc import ABC
 import logging
 
-logger = logging.getLogger("cptpy.wavefieldtransforms")
+logger = logging.getLogger("cptpy.register")
 
 class AbstractRegistry(ABC):
 
@@ -30,6 +30,10 @@ class AbstractRegistry(ABC):
         return cls._register[name]
 
 
-class UnitWeightRegistry(AbstractRegistry):
+class CPTUnitWeightRegistry(AbstractRegistry):
+
+    _register = {}
+
+class CPTuUnitWeightRegistry(AbstractRegistry):
 
     _register = {}
