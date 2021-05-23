@@ -2,13 +2,13 @@
 
 import numpy as np
 
-from cptpy import CPT
-from cptpy.constants import GAMMA_W, PA
-
+from .cpt import CPT
+from .constants import GAMMA_W, PA
+from .register import UnitWeightRegistry
 
 class CPTu(CPT):
-    _ncols_in_cpt = 4
-    attrs = ["depth", "qc", "fs", "u2"]
+    _ncols_in_cpt = 5
+    attrs = ["depth", "qc", "fs", "u2", "unit_weight"]
 
     def __init__(self, depth, qc, fs, u2, gwt=None,
                  depth_to_m=lambda depth: depth, qc_to_kpa=lambda qc: qc,
@@ -105,7 +105,7 @@ class CPTu(CPT):
         """Corrected total sleeve friction, alias for fs."""
         return self.fs
 
-    def unit_weight(self, procedure="Robertson and Cabal 2010"):
+    def unit_weight(self, procedure="Robertson and Cabal 2010", gs=2.65):
         """Estimate soil unit weight.
 
         Parameters
@@ -133,10 +133,4 @@ class CPTu(CPT):
         included here as an alias to Robertson and Cabal (2010).
 
         """
-        register = {"Robertson 2010": self._unitweight_robertson_and_cabal_2010,
-                    "Robertson and Cabal 2010": self._unitweight_robertson_and_cabal_2010}
-        return register[procedure]()
-
-    def _unitweight_robertson_and_cabal_2010(self, gs=2.65):
-        """Estimate unit weight from Robertson and Cabal (2010) eq2."""
-        return GAMMA_W*(0.27*np.log10(self.rf) + 0.36*np.log10(self.qt()/PA) + 1.236)*gs/2.65
+        return UnitWeightRegistry[procedure](self, gs=2.65)
