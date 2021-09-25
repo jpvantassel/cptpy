@@ -10,6 +10,7 @@ from .constants import PA, GAMMA_W
 class CPT():
     _ncols_in_cpt = 3
     attrs = ["depth", "qc", "fs"]
+    units = ["m", "kpa", "kpa"]
 
     def __init__(self, depth, qc, fs, depth_to_m=lambda depth: depth,
                  qc_to_kpa=lambda qc: qc, fs_to_kpa=lambda fs: fs):
@@ -78,7 +79,7 @@ class CPT():
         values = converter(values)
         return values
 
-    def sanity_check(self, apply_fixes="prompt"):
+    def sanity_check(self, apply_fixes="prompt", window_pts=3, reject_nstd=6):
         """Perform's various sanity checks on the provided `CPT` data.
 
         Sanity checks include: depth values are strictly greater than
@@ -93,11 +94,20 @@ class CPT():
             , to ingore the fixes pass `"no"`, to have the program
             prompt for authorization use `"prompt"`, the default is 
             `"prompt"`.
+        window_pts : int, optional
+            Select the number of points before and after the point of
+            interest to determine if it is an outlier, default is 3
+            (i.e., 6 point in total will be considered).
+        reject_nstd : float, optional
+            Set threshold by which a point is designated an outlier,
+            default is 6 standard deviations. Note that the point of
+            interest is not considered in calculating the regions
+            statistics.
 
         Returns
         -------
         None
-            May update `CPT` state if `apply_fixes` is `"yes"` or
+            May update `CPT` state if `apply_fixes` is `"yes"` or 
             `"prompt"`.
 
         """
@@ -106,14 +116,17 @@ class CPT():
             msg += "'yes', 'no', or 'prompt' instead."
             raise ValueError(msg)
 
-        # Depth less than or equal to zero.
-        if np.any(self.depth <= 0):
+        def pretty_print_row(row):
+            pretty_row = ""
+            for attr, value, unit in zip(self.attrs, row, self.units):
+                pretty_row += f" {attr}={value:.2f} {unit} |"
+            print(pretty_row)
+
+        def handle_problematic_indices(problematic_indices, apply_fixes, msg):
             indices_to_delete = []
-            problematic_indices = np.argwhere(self.depth <= 0)
             for index in problematic_indices:
-                msg = "A reading at a depth less than zero was found: "
-                msg += f"{np.round(self._cpt[index])}"
-                warnings.warn(msg)
+                print(msg)
+                pretty_print_row(self._cpt[index])
 
                 response = "n"
                 if apply_fixes == "prompt":
@@ -121,13 +134,20 @@ class CPT():
 
                 if response == "y" or apply_fixes == "yes":
                     indices_to_delete.append(index)
+                print()
+            return indices_to_delete
 
+        # no depth less than or equal to zero.
+        if np.any(self._cpt[:,0] <= 0):
+            problematic_indices = np.argwhere(self.depth <= 0).flatten()
+            msg = "A reading at a depth less than zero was found:\n"
+            indices_to_delete = handle_problematic_indices(problematic_indices, apply_fixes, msg)
             del self[indices_to_delete]
 
-        # Depth increases monotonically.
+        # depth increases monotonically.
         diff = self.depth[1:] - self.depth[:-1]
         if np.any(diff <= 0):
-            warnings.warn("Depths readings do not increase monotonically.")
+            print("Depths readings do not increase monotonically.")
 
             response = "n"
             if apply_fixes == "prompt":
@@ -136,44 +156,37 @@ class CPT():
             if response == "y" or apply_fixes == "yes":
                 self._cpt = self._cpt[np.argsort(self.depth), :]
 
-        # No duplicate depth measurements.
+        # no duplicate depth measurements.
         diff = self.depth[1:] - self.depth[:-1]
         if np.any(diff < 1E-6):
-
-            indices_to_delete = []
-            problematic_indices = np.argwhere(diff < 1E-6)
-            for index in problematic_indices:
-                msg = "A duplicate depth reading has been found: "
-                msg += f"{np.round(self._cpt[index])}"
-                warnings.warn(msg)
-
-                response = "n"
-                if apply_fixes == "prompt":
-                    response = input("Discard extra depth reading? (y/n) ")
-
-                if response == "y" or apply_fixes == "yes":
-                    indices_to_delete.append(index+1)
-
+            problematic_indices = np.argwhere(diff < 1E-6).flatten()
+            msg = "A duplicate depth reading has been found: "
+            indices_to_delete = handle_problematic_indices(problematic_indices, apply_fixes, msg)
             del self[indices_to_delete]
 
         # qc and fs are greater than zero at all depths.
-        if np.any(self._cpt <= 0):
-            indices_to_delete = []
-            problematic_indices = np.argwhere(np.logical_or(
-                self._cpt[:, 1] <= 0, self._cpt[:, 2] <= 0))
-            for index in problematic_indices:
-                msg = "A qc and/or fs value was found to be less than or equal to zero: "
-                msg += f"{np.round(self._cpt[index],1)}"
-                warnings.warn(msg)
-
-                response = "n"
-                if apply_fixes == "prompt":
-                    response = input("Discard reading? (y/n) ")
-
-                if response == "y" or apply_fixes == "yes":
-                    indices_to_delete.append(index)
-
+        if np.any(self._cpt[:, 1:3] <= 0):
+            problematic_indices = np.argwhere(np.logical_or(self._cpt[:, 1] <= 0, self._cpt[:, 2] <= 0)).flatten()
+            msg = "A qc and/or fs value was found to be less than or equal to zero: "
+            indices_to_delete = handle_problematic_indices(problematic_indices, apply_fixes, msg)
             del self[indices_to_delete]
+
+        # qc and fs should be "locally" smooth.
+        problematic_indices = []
+        for index, (_qc, _fs) in enumerate(self._cpt[window_pts:-window_pts, 1:3], start=window_pts):
+            region = self._cpt[index-window_pts:index+window_pts+1, 1:3]
+            region = np.delete(region, window_pts, axis=0)
+            (qc_mean, fs_mean) = np.mean(region, axis=0)
+            (qc_std, fs_std) = np.std(region, axis=0, ddof=1)
+            qc_z = np.abs(_qc - qc_mean)/qc_std
+            fs_z = np.abs(_fs - fs_mean)/fs_std
+            if (qc_z > reject_nstd) or (fs_z > reject_nstd):
+                problematic_indices.append(index)
+
+        msg = "A qc and/or fs value was found to be greater than\n"
+        msg += f"{reject_nstd} standard deviations beyond the background:"
+        indices_to_delete = handle_problematic_indices(problematic_indices, apply_fixes, msg)
+        del self[indices_to_delete]
 
     @property
     def rf(self):

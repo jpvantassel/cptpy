@@ -1,10 +1,14 @@
 """CPTu class definition."""
 
+import warnings
+
 from .cpt import CPT
 
 class CPTu(CPT):
     _ncols_in_cpt = 4
     attrs = ["depth", "qc", "fs", "u2"]
+    units = ["m", "kpa", "kpa", "kpa"]
+
 
     def __init__(self, depth, qc, fs, u2,
                  depth_to_m=lambda depth: depth, qc_to_kpa=lambda qc: qc,
