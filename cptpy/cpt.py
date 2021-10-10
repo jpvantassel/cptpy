@@ -79,7 +79,8 @@ class CPT():
         values = converter(values)
         return values
 
-    def sanity_check(self, apply_fixes="prompt", window_pts=3, reject_nstd=6):
+    def sanity_check(self, apply_fixes="prompt", window_pts=3, reject_nstd=6,
+                     verbose=False):
         """Perform's various sanity checks on the provided `CPT` data.
 
         Sanity checks include: depth values are strictly greater than
@@ -103,6 +104,10 @@ class CPT():
             default is 6 standard deviations. Note that the point of
             interest is not considered in calculating the regions
             statistics.
+        verbose : bool, optional
+            Toggle whether information should be printed to the screen,
+            default is `False`. Note that if `apply_fixes` is "prompt"
+            verbose will default to `True`.
 
         Returns
         -------
@@ -115,6 +120,9 @@ class CPT():
             msg = f"apply_fixes='{apply_fixes}' is not recognized try: "
             msg += "'yes', 'no', or 'prompt' instead."
             raise ValueError(msg)
+        
+        if apply_fixes == "prompt":
+            verbose = True
 
         def pretty_print_row(row):
             pretty_row = ""
@@ -125,8 +133,9 @@ class CPT():
         def handle_problematic_indices(problematic_indices, apply_fixes, msg):
             indices_to_delete = []
             for index in problematic_indices:
-                print(msg)
-                pretty_print_row(self._cpt[index])
+                if verbose:
+                    print(msg)
+                    pretty_print_row(self._cpt[index])
 
                 response = "n"
                 if apply_fixes == "prompt":
@@ -134,7 +143,10 @@ class CPT():
 
                 if response == "y" or apply_fixes == "yes":
                     indices_to_delete.append(index)
-                print()
+
+                if verbose:
+                    print()
+
             return indices_to_delete
 
         # no depth less than or equal to zero.
@@ -147,7 +159,8 @@ class CPT():
         # depth increases monotonically.
         diff = self.depth[1:] - self.depth[:-1]
         if np.any(diff <= 0):
-            print("Depths readings do not increase monotonically.")
+            if verbose:
+                print("Depths readings do not increase monotonically.")
 
             response = "n"
             if apply_fixes == "prompt":
@@ -157,9 +170,10 @@ class CPT():
                 self._cpt = self._cpt[np.argsort(self.depth), :]
 
         # no duplicate depth measurements.
+        # TODO (jpv): I believe this breaks if there is more than one duplicate (i.e., a depth listed three or more times).
         diff = self.depth[1:] - self.depth[:-1]
         if np.any(diff < 1E-6):
-            problematic_indices = np.argwhere(diff < 1E-6).flatten()
+            problematic_indices = np.argwhere(diff < 1E-6).flatten() + 1
             msg = "A duplicate depth reading has been found: "
             indices_to_delete = handle_problematic_indices(problematic_indices, apply_fixes, msg)
             del self[indices_to_delete]
