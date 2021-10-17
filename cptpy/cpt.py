@@ -317,6 +317,37 @@ class CPT():
                 warnings.warn(f"Unknown soil type encountered at index={i}")
         return (zone, sbt)
 
+    # TODO (jpv): Requires unit test.
+    def to_csv(self, fname):
+        """Write CPT to `.csv`."""
+        lines = []
+
+        # Header
+        line = ""
+        for attr, unit in zip(self.attrs, self.units):
+            line += f"{attr} ({unit}),"
+        line = line[:-1]
+        line += "\n"
+        lines.append(line)
+
+        # Data
+        for row in self._cpt:
+            line = ""
+            for value in row:
+                line += f"{value:4f},"
+            line = line[:-1]
+            line += "\n"
+            lines.append(line)
+
+        # Write to file
+        with open(fname, "w") as f:
+            for line in lines:
+                f.write(line)
+
+    # @classmethod
+    # def from_csv(cls, fname):
+    # TODO (jpv): Should probably write this at some point.
+
     def __len__(self):
         """Define len (i.e., len(self)) operation."""
         return self._cpt.shape[0]
