@@ -65,12 +65,12 @@ class CPT_Parameters():
         Mayne, P.W., Peuchen, J., & Bouwmeester, D. (2010). Soil unit
         weight estimation from CPTs. Presented at the 2nd International
         Symposium on Cone Penetration Testing (CPT10), Omnipress,
-        Huntington Beach, CA, USA, pp. 169–176.
+        Huntington Beach, CA, USA, pp. 169-176.
 
         Mayne, P.W. (2014). Interpretation of geotechnical parameters
         from seismic piezocone tests. Presented at the 3rd International
-        Symposium on Cone Pentration Testing (CPT’14), Las Vegas,
-        Nevada, USA, pp. 47–73.
+        Symposium on Cone Pentration Testing (CPT'14), Las Vegas,
+        Nevada, USA, pp. 47-73.
 
         Notes
         -----

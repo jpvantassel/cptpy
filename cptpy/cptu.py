@@ -70,9 +70,9 @@ class CPTu(CPT):
         References
         ----------
         Robertson, P. K. (2012). The James K. Mitchell Lecture:
-        Interpretation of in-situ tests–some insights. Proc. 4th Int.
+        Interpretation of in-situ tests-some insights. Proc. 4th Int.
         Conf. on Geotechnical and Geophysical Site
-        Characterization–ISC’4.
+        Characterization-ISC'4.
 
         """
         an = float(an)

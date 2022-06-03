@@ -230,8 +230,8 @@ class CPT():
         ----------
         Robertson, P.K., 2010. Soil behavior type from the CPT: an
         update, in: 2nd International Symposium on Cone Penetration
-        Testing. Presented at the CPT ’10, Huntington Beach, CA, USA,
-        pp. 575–583.
+        Testing. Presented at the CPT '10, Huntington Beach, CA, USA,
+        pp. 575-583.
 
         """
         # TODO (jpv): Factor out register.
@@ -265,8 +265,8 @@ class CPT():
         ----------
         Robertson, P.K., 2010. Soil behavior type from the CPT: an
         update, in: 2nd International Symposium on Cone Penetration
-        Testing. Presented at the CPT ’10, Huntington Beach, CA, USA,
-        pp. 575–583.
+        Testing. Presented at the CPT '10, Huntington Beach, CA, USA,
+        pp. 575-583.
 
         """
         isbt = self.isbt(procedure=procedure)
