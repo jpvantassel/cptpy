@@ -234,6 +234,7 @@ class CPT():
         pp. 575–583.
 
         """
+        # TODO (jpv): Factor out register.
         register = {"Robertson 2010": self._isbt_robertson_2010}
         return register[procedure]()
 
